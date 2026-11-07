@@ -147,3 +147,20 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Java / Maven
+target/
+build/
+*.class
+.idea/
+
+# Expo / React Native
+.expo/
+
+# Segredos (a linha !.env.example já existe acima)
+*.env
