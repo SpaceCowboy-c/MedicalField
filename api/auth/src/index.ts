@@ -1,18 +1,44 @@
-import "dotenv/config"; //le o.env
-import express from "express";  // framework que cria o servidor HTTP
-import { authRouter } from "./routes/auth"; //o grupo de rotas do login, definido em routes/auth.ts
+import "dotenv/config";
 
-const app = express(); //Cria a aplicação (o servidor).
-app.use(express.json()); //Ensina o servidor a ler corpo em JSON.
+// Verifica se todas as variáveis obrigatórias estão configuradas.
+for (const v of ["JWT_SECRET", "DB_NAME", "DB_USER", "DB_PASSWORD"]) {
+    if (!process.env[v]) {
+        console.error(`Variável de ambiente ausente: ${v}`);
+        process.exit(1);
+    }
+}
 
-app.get("/health", (_req, res) => { //rota de teste para verificar se o servidor está rodando
-    res.json({ status: "ok", servico: "auth" }); 
+import express from "express"; //gerencia as rotas
+import cors from "cors"; // Permite requisições de diferentes origens.
+import { authRouter } from "./routes/auth";  
+import { auditoria } from "./middleware/auditoria"; //mildaware que controla os registros de acesso
+import { autenticar } from "./middleware/autenticar"; //mildware que controla a autenticação
+
+const app = express(); //cria a aplicação
+
+//// Configura os middlewares utilizados pelo servidor.
+app.use(cors());
+app.use(express.json());
+app.use(auditoria);
+
+app.get("/health", autenticar, (_req, res) => {  //rota /health para verificar o funcionamento do serviço.
+    res.json({ status: "ok", servico: "auth" });
 });
 
-app.use("/auth", authRouter); // Monta o grupo de rotas sob o prefixo "/auth".
+app.use("/auth", authRouter); //// Registra as rotas de autenticação com o prefixo /auth.
 
-// Lê a porta do .env (padrão 8082) e começa a escutar pedidos.
-const PORT = Number(process.env.PORT ?? 8082);
-app.listen(PORT, () => {
+app.use((_req, res) => {
+    res.status(404).json({ erro: "Rota não encontrada" }); // Retorna HTTP 404.
+});
+
+// Middleware responsável por capturar erros ocorridos durante as requisições.
+app.use((erro: any, _req: any, res: any, _next: any) => {
+    console.error(erro);
+    res.status(erro.status ?? 500).json({ erro: "Erro interno" });
+});
+
+const PORT = Number(process.env.PORT ?? 8082); //porta definida
+
+app.listen(PORT, "0.0.0.0", () => { 
     console.log(`Auth rodando na porta ${PORT}`);
 });
