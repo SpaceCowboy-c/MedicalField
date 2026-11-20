@@ -1,20 +1,33 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { useState } from "react";
+import AuthScreen from "./src/features/auth/auth_screen";
+import HomeScreen from "./src/features/home/home_screen";
+import { Profissional } from "./src/services/auth_service";
 
 export default function App() {
+  // Guarda quem está logado e o token. Se for null, ninguém logou.
+  const [profissional, setProfissional] = useState<Profissional | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+
+  // Logado: mostra a Home
+  if (profissional && token) {
+    return (
+      <HomeScreen
+        profissional={profissional}
+        aoSair={() => {
+          setProfissional(null);
+          setToken(null);
+        }}
+      />
+    );
+  }
+
+  // Não logado: mostra o login
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthScreen
+      aoLogar={(p, t) => {
+        setProfissional(p);
+        setToken(t);
+      }}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

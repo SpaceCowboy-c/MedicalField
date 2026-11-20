@@ -12,20 +12,19 @@ import express from "express"; //gerencia as rotas
 import cors from "cors"; // Permite requisições de diferentes origens.
 import { authRouter } from "./routes/auth";  
 import { auditoria } from "./middleware/auditoria"; //mildaware que controla os registros de acesso
-import { autenticar } from "./middleware/autenticar"; //mildware que controla a autenticação
 
 const app = express(); //cria a aplicação
 
-//// Configura os middlewares utilizados pelo servidor.
+// Configura os middlewares utilizados pelo servidor.
 app.use(cors());
 app.use(express.json());
 app.use(auditoria);
 
-app.get("/health", autenticar, (_req, res) => {  //rota /health para verificar o funcionamento do serviço.
+app.get("/health", (_req, res) => {
     res.json({ status: "ok", servico: "auth" });
 });
 
-app.use("/auth", authRouter); //// Registra as rotas de autenticação com o prefixo /auth.
+app.use("/auth", authRouter); // Registra as rotas de autenticação com o prefixo /auth.
 
 app.use((_req, res) => {
     res.status(404).json({ erro: "Rota não encontrada" }); // Retorna HTTP 404.
